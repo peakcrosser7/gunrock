@@ -14,9 +14,10 @@ using namespace memory;
 /**
  * @brief Compressed Sparse Row (CSR) format.
  *
- * @tparam index_t
- * @tparam offset_t
- * @tparam value_t
+ * @tparam space 内存类型
+ * @tparam index_t 行索引类型
+ * @tparam offset_t 列偏移类型
+ * @tparam value_t 数据类型
  */
 template <memory_space_t space,
           typename index_t,
@@ -70,11 +71,11 @@ struct csr_t {
    * @brief Convert a Coordinate Sparse Format into Compressed Sparse Row
    * Format.
    *
-   * @tparam index_t
-   * @tparam offset_t
-   * @tparam value_t
-   * @param coo
-   * @return csr_t<space, index_t, offset_t, value_t>&
+   * @tparam index_t 行索引类型
+   * @tparam offset_t 列偏移类型
+   * @tparam value_t 数据类型
+   * @param coo Coordinate格式矩阵
+   * @return csr_t<space, index_t, offset_t, value_t>
    */
   csr_t<space, index_t, offset_t, value_t> from_coo(
       const coo_t<memory_space_t::host, index_t, offset_t, value_t>& coo) {
@@ -148,6 +149,7 @@ struct csr_t {
 
     // If returning a device csr_t, move coverted data to device.
     if (space == memory_space_t::device) {
+      // 这里的赋值运算符会隐式将数据从host移至device
       row_offsets = Ap;
       column_indices = Aj;
       nonzero_values = Ax;
@@ -156,6 +158,8 @@ struct csr_t {
     return *this;  // CSR representation (with possible duplicates)
   }
 
+  /// @brief 读取二进制CSR文件
+  /// @param filename 文件路径
   void read_binary(std::string filename) {
     FILE* file = fopen(filename.c_str(), "rb");
 

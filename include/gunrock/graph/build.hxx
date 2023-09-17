@@ -18,6 +18,18 @@ namespace gunrock {
 namespace graph {
 namespace build {
 
+/// @brief 由CSR格式矩阵构建图
+/// @tparam space 内存类型
+/// @tparam build_views 图视图
+/// @param r 矩阵行数
+/// @param c 矩阵列数
+/// @param nnz 矩阵非零元数
+/// @param Ap 行偏移数组
+/// @param J 列索引数组
+/// @param X 值数组
+/// @param I 行索引数组
+/// @param Aj 列偏移数组
+/// @return 构造的图结构
 template <memory_space_t space,
           view_t build_views,
           typename edge_t,

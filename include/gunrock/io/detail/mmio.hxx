@@ -31,6 +31,11 @@ extern "C" {
 #define MatrixMarketBanner "%%MatrixMarket"
 #define MM_MAX_TOKEN_LENGTH 64
 
+// 矩阵码
+// [0]: 存储对象 'M'-Matrix
+// [1]: 矩阵格式 'C'-coordinate 'A'-array
+// [2]: 数据类型 'R'-real 'C'-complex 'P'-pattern 'I'-integer
+// [3]: 矩阵形状 'G'-general 'S'-symmetric 'H'-hermitian 'K'-skew-symmetric
 typedef char MM_typecode[4];
 
 char* mm_typecode_to_str(MM_typecode matcode);

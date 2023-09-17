@@ -100,13 +100,17 @@ int mm_is_valid(MM_typecode matcode) {
   return 1;
 }
 
+/// @brief 读取矩阵市场文件表头行
+/// @param f 文件指针
+/// @param[out] matcode 矩阵码
+/// @return 错误码,成功为0
 int mm_read_banner(FILE* f, MM_typecode* matcode) {
   char line[MM_MAX_LINE_LENGTH];
-  char banner[MM_MAX_TOKEN_LENGTH];
-  char mtx[MM_MAX_TOKEN_LENGTH];
-  char crd[MM_MAX_TOKEN_LENGTH];
-  char data_type[MM_MAX_TOKEN_LENGTH];
-  char storage_scheme[MM_MAX_TOKEN_LENGTH];
+  char banner[MM_MAX_TOKEN_LENGTH];         // 矩阵市场文件标识符("%%MatrixMarket")
+  char mtx[MM_MAX_TOKEN_LENGTH];            // 存储对象(matrix/vector)
+  char crd[MM_MAX_TOKEN_LENGTH];            // 矩阵格式(coordinate/array;)
+  char data_type[MM_MAX_TOKEN_LENGTH];      // 数据类型(real/complex/integer/pattern)
+  char storage_scheme[MM_MAX_TOKEN_LENGTH]; // 矩阵形状(general/symmetric/skew-symmetric/hermitian)
   char* p;
 
   mm_clear_typecode(matcode);
@@ -132,7 +136,7 @@ int mm_read_banner(FILE* f, MM_typecode* matcode) {
     return MM_NO_HEADER;
 
   /* first field should be "mtx" */
-  if (strcmp(mtx, MM_MTX_STR) != 0)
+  if (strcmp(mtx, MM_MTX_STR) != 0) // 需读取矩阵类型文件
     return MM_UNSUPPORTED_TYPE;
   mm_set_matrix(matcode);
 
@@ -182,6 +186,12 @@ int mm_write_mtx_crd_size(FILE* f, int M, int N, int nz) {
     return 0;
 }
 
+/// @brief 读取矩阵Coordinate格式大小
+/// @param f 矩阵文件指针
+/// @param[out] M 行数
+/// @param[out] N 列数
+/// @param[out] nz 非零元数
+/// @return 是否成功
 int mm_read_mtx_crd_size(FILE* f,
                          std::size_t* M,
                          std::size_t* N,

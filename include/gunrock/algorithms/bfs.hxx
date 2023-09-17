@@ -142,8 +142,8 @@ struct enactor_t : gunrock::enactor_t<problem_t> {
  * @tparam graph_t Graph type.
  * @param G Graph object.
  * @param single_source A vertex in the graph (integral type).
- * @param distances Pointer to the distances array of size number of vertices.
- * @param predecessors Pointer to the predecessors array of size number of
+ * @param[out] distances Pointer to the distances array of size number of vertices.
+ * @param[out] predecessors Pointer to the predecessors array of size number of
  * vertices. (optional, wip)
  * @param context Device context.
  * @return float Time taken to run the algorithm.

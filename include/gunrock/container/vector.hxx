@@ -24,6 +24,8 @@ namespace gunrock {
 
 using namespace memory;
 
+/// @brief 向量类型
+/// @tparam space 内存类型
 template <typename type_t, memory_space_t space = memory_space_t::device>
 using vector_t =
     std::conditional_t<space == memory_space_t::host,  // condition

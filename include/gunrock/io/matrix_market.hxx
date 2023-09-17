@@ -67,6 +67,8 @@ enum matrix_market_storage_scheme_t { general, hermitian, symmetric, skew };
  * +----------------------------------------------+
  *
  * Indices are 1-based i.2. A(1,1) is the first element.
+ * 
+ * Reference: https://math.nist.gov/MatrixMarket/formats.html
  */
 template <typename vertex_t, typename edge_t, typename weight_t>
 struct matrix_market_t {
@@ -76,7 +78,9 @@ struct matrix_market_t {
   using file_t = FILE*;
   using matrix_market_code_t = MM_typecode;
 
+  /// @brief 文件路径
   std::string filename;
+  /// @brief 数据集名称
   std::string dataset;
 
   // Dataset characteristics
@@ -193,7 +197,7 @@ struct matrix_market_t {
 
     if (mm_is_symmetric(code)) {  // duplicate off diagonal entries
       scheme = matrix_market_storage_scheme_t::symmetric;
-      vertex_t off_diagonals = 0;
+      vertex_t off_diagonals = 0; // 非对角线元素个数
       for (vertex_t i = 0; i < coo.number_of_nonzeros; ++i) {
         if (coo.row_indices[i] != coo.column_indices[i])
           ++off_diagonals;
@@ -211,6 +215,7 @@ struct matrix_market_t {
       weight_t* _V = new_V.data();
 
       vertex_t ptr = 0;
+      // 对称矩阵需要将设置对称元素
       for (vertex_t i = 0; i < coo.number_of_nonzeros; ++i) {
         if (coo.row_indices[i] != coo.column_indices[i]) {
           _I[ptr] = coo.row_indices[i];

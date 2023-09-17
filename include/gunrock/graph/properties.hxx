@@ -42,6 +42,7 @@ constexpr inline view_t unset(view_t lhs, view_t rhs) {
                              ~static_cast<uint32_t>(rhs));
 }
 
+/// @brief 图结构视图lhs中是否包含rhs 
 constexpr inline bool has(view_t lhs, view_t rhs) {
   return (static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs)) ==
          static_cast<uint32_t>(rhs);

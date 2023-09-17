@@ -11,9 +11,10 @@ using namespace memory;
 /**
  * @brief Coordinate (COO) format.
  *
- * @tparam index_t
- * @tparam nz_size_t
- * @tparam value_t
+ * @tparam space 内存类型
+ * @tparam index_t 索引类型
+ * @tparam nz_size_t 非零元大小类型
+ * @tparam value_t 数据类型
  */
 template <memory_space_t space,
           typename index_t,
@@ -24,7 +25,8 @@ struct coo_t {
   index_t number_of_columns;
   nz_size_t number_of_nonzeros;
 
-  vector_t<index_t, space> row_indices;     // I
+  /// @brief 行索引向量 
+  vector_t<index_t, space> row_indices;
   vector_t<index_t, space> column_indices;  // J
   vector_t<value_t, space> nonzero_values;  // V
 
