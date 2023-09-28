@@ -57,13 +57,14 @@ template <memory_space_t space,
 class graph_t : public graph_view_t... {
   // see: <gunrock/util/type_traits.hxx>
   using true_view_t =
-      filter_tuple_t<std::tuple<empty_graph_t,
+      filter_tuple_t<std::tuple<empty_graph_t,  // 去除图结构视图中的空类型
                                 empty_csr_t,
                                 empty_csc_t,
                                 empty_coo_t>,  // filter these types.
                      std::tuple<graph_view_t...>>;
 
   // Default view (graph representation) if no view is specified
+  // 默认使用元组中的第一个图结构视图作为默认视图
   using default_view_t = std::tuple_element_t<0, true_view_t>;
 
  public:

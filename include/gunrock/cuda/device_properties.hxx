@@ -18,6 +18,7 @@ namespace gcuda {
 
 typedef cudaDeviceProp device_properties_t;
 
+/// @brief 算力结构体
 struct compute_capability_t {
   unsigned major;
   unsigned minor;

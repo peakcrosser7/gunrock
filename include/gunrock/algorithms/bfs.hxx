@@ -15,15 +15,19 @@
 namespace gunrock {
 namespace bfs {
 
+/// @brief BFS参数
 template <typename vertex_t>
 struct param_t {
   vertex_t single_source;
   param_t(vertex_t _single_source) : single_source(_single_source) {}
 };
 
+/// @brief BFS结果
 template <typename vertex_t>
 struct result_t {
+  /// @brief 与源结点距离
   vertex_t* distances;
+  /// @brief 前驱结点
   vertex_t* predecessors;  /// @todo: implement this.
   result_t(vertex_t* _distances, vertex_t* _predecessors)
       : distances(_distances), predecessors(_predecessors) {}
@@ -46,6 +50,7 @@ struct problem_t : gunrock::problem_t<graph_t> {
   using edge_t = typename graph_t::edge_type;
   using weight_t = typename graph_t::weight_type;
 
+  /// @brief 已访问的结点数组
   thrust::device_vector<vertex_t> visited;  /// @todo not used.
 
   void init() override {}
@@ -53,6 +58,7 @@ struct problem_t : gunrock::problem_t<graph_t> {
   void reset() override {
     auto n_vertices = this->get_graph().get_number_of_vertices();
     auto d_distances = thrust::device_pointer_cast(this->result.distances);
+    // 设置初始距离为无穷,源结点初始距离为0
     thrust::fill(thrust::device, d_distances + 0, d_distances + n_vertices,
                  std::numeric_limits<vertex_t>::max());
     thrust::fill(thrust::device, d_distances + this->param.single_source,
@@ -74,6 +80,7 @@ struct enactor_t : gunrock::enactor_t<problem_t> {
   void prepare_frontier(frontier_t* f,
                         gcuda::multi_context_t& context) override {
     auto P = this->get_problem();
+    // 将源结点放入激活前沿
     f->push_back(P->param.single_source);
   }
 
@@ -84,7 +91,7 @@ struct enactor_t : gunrock::enactor_t<problem_t> {
     auto G = P->get_graph();
 
     auto single_source = P->param.single_source;
-    auto distances = P->result.distances;
+    auto distances = P->result.distances; 
     auto visited = P->visited.data().get();
 
     auto iteration = this->iteration;

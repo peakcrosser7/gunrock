@@ -32,7 +32,9 @@ struct problem_t {
   using edge_t = typename graph_t::edge_type;
   using weight_t = typename graph_t::weight_type;
 
+  /// @brief 图切片
   graph_t graph_slice;
+  /// @brief 上下文
   std::shared_ptr<gcuda::multi_context_t> context;
 
   problem_t() : graph_slice(nullptr) {}

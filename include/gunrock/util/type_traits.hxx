@@ -40,6 +40,7 @@ namespace gunrock {
  */
 template <typename...>
 struct tuple_join {};
+/// @brief 合并两个tuple生成一个合并的tuple类型
 template <typename... Pack1, typename... Pack2>
 struct tuple_join<std::tuple<Pack1...>, std::tuple<Pack2...>> {
   using type = std::tuple<Pack1..., Pack2...>;
@@ -48,34 +49,53 @@ struct tuple_join<std::tuple<Pack1...>, std::tuple<Pack2...>> {
 template <typename...>
 struct filter_single_tuple {};
 
+/// @brief 过滤tuple中的单个类型(递归终止条件)
+///        Pack为空时,即std::tuple<>调用,返回std::tuple<>::type
 template <typename Target, typename... Pack>
 struct filter_single_tuple<Target, std::tuple<Pack...>> {
   using type = std::tuple<Pack...>;
 };
 
+/// @brief 过滤tuple中的单个类型
+/// @tparam Target 要过滤的类型
+/// @tparam Parameter tuple中的第一个模板参数类型
+/// @tparam ...Pack tuple中的后续模板参数类型
 template <typename Target, typename Parameter, typename... Pack>
 struct filter_single_tuple<Target, std::tuple<Parameter, Pack...>> {
+  // 合并元组类型
   using type = typename tuple_join<
+      // 若Parameter类型与Target类型相同则从std::tuple<Parameter, Pack...>中移除
       std::conditional_t<std::is_same_v<Target, Parameter>,
                          std::tuple<>,
                          std::tuple<Parameter>>,
-      typename filter_single_tuple<Target, std::tuple<Pack...>>::type>::type;
+      // 递归判断Pack...中剩余类型
+      typename filter_single_tuple<Target, std::tuple<Pack...>>::type
+  >::type;
 };
 
 template <typename... Pack>
 struct filter_tuple {};
+/// @brief 过滤tuple中指定类型(递归终止条件)
 template <typename... Types>
 struct filter_tuple<std::tuple<>, std::tuple<Types...>> {
   using type = std::tuple<Types...>;
 };
 
+/// @brief 过滤tuple中指定类型
+/// @tparam Target 待过滤掉的第一个模板参数类型
+/// @tparam ...RemainingTargets 剩余待过滤掉的模板参数类型
+/// @tparam ...Types 需要被过滤的模板类型
 template <typename Target, typename... RemainingTargets, typename... Types>
 struct filter_tuple<std::tuple<Target, RemainingTargets...>,
                     std::tuple<Types...>> {
   using type = typename filter_single_tuple<
+      // 从Types...Target
       Target,
+      // 从Types递归去除RemainingTargets...
       typename filter_tuple<std::tuple<RemainingTargets...>,
-                            std::tuple<Types...>>::type>::type;
+                            std::tuple<Types...>
+                            >::type
+  >::type;
 };
 
 /**

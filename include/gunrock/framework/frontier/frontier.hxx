@@ -30,6 +30,9 @@ namespace gunrock {
 namespace frontier {
 using namespace memory;
 
+/// @brief 图计算前沿
+/// @tparam _kind 前沿类型
+/// @tparam _view 前沿视图类型
 template <typename vertex_t,
           typename edge_t,
           frontier_kind_t _kind = frontier_kind_t::vertex_frontier,
@@ -53,6 +56,7 @@ class frontier_t : public frontier::vector_frontier_t<vertex_t, edge_t, _kind> {
   //     frontier::vector_frontier_t<vertex_t, edge_t, _kind>,
   //     experimental::frontier::boolmap_frontier_t<vertex_t, edge_t, _kind>>;
 
+  /// @brief 底层的前沿视图类型
   using underlying_view_t =
       frontier::vector_frontier_t<vertex_t, edge_t, _kind>;
 
@@ -74,11 +78,12 @@ class frontier_t : public frontier::vector_frontier_t<vertex_t, edge_t, _kind> {
   frontier_t(
       std::size_t size,
       float frontier_resizing_factor = 1.0,
+      // 通过enable_if达到在类型相同时类型推导成功,函数启用;反之推导失败函数禁用
       typename std::enable_if<std::is_same<
           U,
-          frontier::vector_frontier_t<vertex_t, edge_t, _kind>>::value>::type* =
-          nullptr)
-      : underlying_view_t(size, frontier_resizing_factor) {}
+          frontier::vector_frontier_t<vertex_t, edge_t, _kind>
+        >::value>::type* = nullptr  // nullpt用于在类型推导成功时的参数赋值
+  ) : underlying_view_t(size, frontier_resizing_factor) {}
 
   /**
    * @brief Destroy the frontier t object. This is an empty destructor, which is

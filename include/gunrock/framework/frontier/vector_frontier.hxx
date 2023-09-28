@@ -25,6 +25,8 @@ namespace gunrock {
 namespace frontier {
 using namespace memory;
 
+/// @brief 基于设备内存向量的前沿
+/// @tparam _kind 前沿类型
 template <typename vertex_t, typename edge_t, frontier_kind_t _kind>
 class vector_frontier_t {
  public:
@@ -292,10 +294,14 @@ class vector_frontier_t {
   }
 
  private:
+  /// @brief 存储数据的设备内存向量
   std::shared_ptr<vector_t<type_t, memory_space_t::device>> p_storage;
+  /// @brief 数据的裸指针
   type_t* raw_ptr;
-  std::size_t num_elements;  // number of elements in the frontier.
-  float resizing_factor;     // reserve size * factor.
+  /// @brief number of elements in the frontier.
+  std::size_t num_elements;
+  /// @brief  reserve size * factor.
+  float resizing_factor;
 };
 
 }  // namespace frontier

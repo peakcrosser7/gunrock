@@ -178,7 +178,7 @@ struct enactor_t {
      * actually may need.
      *
      */
-    if (!(properties.self_manage_frontiers)) {
+    if (!(properties.self_manage_frontiers)) {  // enactor需要管理前沿结点内存
       auto g = problem->get_graph();
       std::size_t initial_size =
           (g.get_number_of_edges() > g.get_number_of_vertices())

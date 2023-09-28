@@ -28,9 +28,11 @@
 namespace gunrock {
 namespace gcuda {
 
+/// 虚设设备函数用于获取相关属性
 template <int dummy_arg>
 __global__ void dummy_k() {}
 
+/// @brief 上下文抽象基类
 struct context_t {
   context_t() = default;
 
@@ -51,12 +53,17 @@ struct context_t {
   virtual util::timer_t& timer() = 0;
 };  // struct context_t
 
+/// @brief 标准上下文
 class standard_context_t : public context_t {
  protected:
+  /// @brief CUDA设备属性
   gcuda::device_properties_t _props;
+  /// @brief CUDA算力版本
   gcuda::compute_capability_t _ptx_version;
 
+  /// @brief 设备ID
   gcuda::device_id_t _ordinal;
+  /// @brief CUDA流
   gcuda::stream_t _stream;
   gcuda::event_t _event;
 
@@ -65,6 +72,7 @@ class standard_context_t : public context_t {
    * information. Currently, we are not releasing this pointer, which causes a
    * memory leak. Fix this later.
    */
+  /// @brief GPU上下文
   mgpu::standard_context_t* _mgpu_context;
 
   util::timer_t _timer;
@@ -78,7 +86,7 @@ class standard_context_t : public context_t {
     error::throw_if_exception(status);
     _ptx_version = gcuda::make_compute_capability(attr.ptxVersion);
 
-    cudaSetDevice(_ordinal);
+    cudaSetDevice(_ordinal);  // 设置使用的CUDA设备
     cudaStreamCreateWithFlags(&_stream, cudaStreamNonBlocking);
     cudaEventCreateWithFlags(&_event, cudaEventDisableTiming);
     cudaGetDeviceProperties(&_props, _ordinal);
@@ -133,9 +141,12 @@ class standard_context_t : public context_t {
 
 };  // class standard_context_t
 
+/// @brief 多设备上下文
 class multi_context_t {
  public:
+  /// @brief 设备上下文列表
   thrust::host_vector<standard_context_t*> contexts;
+  /// @brief 设备ID列表
   thrust::host_vector<gcuda::device_id_t> devices;
   static constexpr std::size_t MAX_NUMBER_OF_GPUS = 1024;
 
@@ -159,7 +170,8 @@ class multi_context_t {
     }
   }
 
-  // Single device.
+  /// @brief 单GPU设备构造函数
+  /// @param _device 设备ID
   multi_context_t(gcuda::device_id_t _device) : devices(1, _device) {
     for (auto& device : devices) {
       standard_context_t* device_context = new standard_context_t(device);
