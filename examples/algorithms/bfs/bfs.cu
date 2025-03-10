@@ -98,10 +98,26 @@ void test_bfs(int num_arguments, char** argument_array) {
           source_vect, tag_vect, num_arguments, argument_array);
   }
 
-  // Print info for last run
+  // // Print info for last run
+  // std::cout << "Source : " << source_vect.back() << "\n";
+  // print::head(distances, 40, "GPU distances");
+  // std::cout << "GPU Elapsed Time : " << run_times[n_runs - 1] << " (ms)"
+  //           << std::endl;
+
+  // Print GTEPS
   std::cout << "Source : " << source_vect.back() << "\n";
-  print::head(distances, 40, "GPU distances");
-  std::cout << "GPU Elapsed Time : " << run_times[n_runs - 1] << " (ms)"
+
+  float avg_time = 0.;
+  int n_valid = 0;
+  // Skip first third of runs which are as warm-up
+  for (int i = n_runs / 3; i < n_runs; i++) {
+    avg_time += run_times[i];
+    ++n_valid;
+  }
+  avg_time /= n_valid;
+  std::cout << "Average Elapsed Time : " << avg_time << " (ms)"
+            << std::endl;
+  std::cout << "GTEPS : " << (n_edges / 1e9) / (avg_time / 1000)
             << std::endl;
 
   // --
