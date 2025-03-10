@@ -8,8 +8,9 @@ set(FETCHCONTENT_BASE_DIR ${FC_BASE})
 
 FetchContent_Declare(
     cmake_modules
-    GIT_REPOSITORY https://github.com/rpavlik/cmake-modules.git
-    GIT_TAG        main
+    # GIT_REPOSITORY https://github.com/rpavlik/cmake-modules.git
+    # GIT_TAG        main
+    SOURCE_DIR ${PROJECT_SOURCE_DIR}/externals/cmake-modules
 )
 
 FetchContent_GetProperties(cmake_modules)

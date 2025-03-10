@@ -8,8 +8,9 @@ set(FETCHCONTENT_BASE_DIR ${FC_BASE})
 
 FetchContent_Declare(
   cxxopts
-    GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
-    GIT_TAG        v3.0.0
+    # GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
+    # GIT_TAG        v3.0.0
+    SOURCE_DIR ${PROJECT_SOURCE_DIR}/externals/cxxopts
 )
 
 FetchContent_GetProperties(cxxopts)

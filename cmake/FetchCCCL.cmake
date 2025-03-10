@@ -8,8 +8,9 @@ set(FETCHCONTENT_BASE_DIR ${FC_BASE})
 
 FetchContent_Declare(
     cccl
-    GIT_REPOSITORY https://github.com/NVIDIA/cccl.git
-    GIT_TAG        main
+    # GIT_REPOSITORY https://github.com/NVIDIA/cccl.git
+    # GIT_TAG        main
+    SOURCE_DIR ${PROJECT_SOURCE_DIR}/externals/cccl
 )
 
 FetchContent_GetProperties(cccl)
