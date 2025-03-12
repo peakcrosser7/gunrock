@@ -105,8 +105,6 @@ void test_bfs(int num_arguments, char** argument_array) {
   //           << std::endl;
 
   // Print GTEPS
-  std::cout << "Source : " << source_vect.back() << "\n";
-
   float avg_time = 0.;
   int n_valid = 0;
   // Skip first third of runs which are as warm-up
@@ -115,6 +113,10 @@ void test_bfs(int num_arguments, char** argument_array) {
     ++n_valid;
   }
   avg_time /= n_valid;
+  std::cout << "Valid Runs : " << n_valid << "\n";
+  if (!params.source_string.empty()) {
+    std::cout << "Source : " << source_vect.back() << "\n";
+  }
   std::cout << "Average Elapsed Time : " << avg_time << " (ms)"
             << std::endl;
   std::cout << "GTEPS : " << (n_edges / 1e9) / (avg_time / 1000)

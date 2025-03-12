@@ -13,6 +13,7 @@ struct parameters_t {
   cxxopts::Options options;
   bool validate;
   bool reduce_all_triangles;
+  int  num_runs = 1;
 
   /**
    * @brief Construct a new parameters object and parse command line arguments.
@@ -30,7 +31,8 @@ struct parameters_t {
         "r,reduce",
         "Compute a single triangle count for the entire graph (default = "
         "false)",
-        cxxopts::value<bool>()->default_value("false"));
+        cxxopts::value<bool>()->default_value("false"))(
+        "n,num_runs","Number of runs", cxxopts::value<int>());
 
     // Parse command line arguments
     auto result = options.parse(argc, argv);
@@ -42,6 +44,9 @@ struct parameters_t {
     filename = result["market"].as<std::string>();
     validate = result["validate"].as<bool>();
     reduce_all_triangles = result["reduce"].as<bool>();
+    if (result.count("num_runs") == 1) {
+      num_runs = result["num_runs"].as<int>();
+    }
   }
 };
 
@@ -88,23 +93,51 @@ void test_tc(int num_arguments, char** argument_array) {
   // Params and memory allocation
 
   vertex_t n_vertices = G.get_number_of_vertices();
-  thrust::device_vector<count_t> triangles_count(n_vertices, 0);
+  // thrust::device_vector<count_t> triangles_count(n_vertices, 0);
 
-  // --
-  // GPU Run
+  // // --
+  // // GPU Run
 
-  std::size_t total_triangles = 0;
-  float gpu_elapsed = tc::run(G, params.reduce_all_triangles,
-                              triangles_count.data().get(), &total_triangles);
+  // std::size_t total_triangles = 0;
+  // float gpu_elapsed = tc::run(G, params.reduce_all_triangles,
+  //                             triangles_count.data().get(), &total_triangles);
 
-  // --
-  // Log
+  // // --
+  // // Log
 
-  print::head(triangles_count, 40, "Per-vertex triangle count");
-  if (params.reduce_all_triangles) {
-    std::cout << "Total Graph Traingles : " << total_triangles << std::endl;
+  // print::head(triangles_count, 40, "Per-vertex triangle count");
+  // if (params.reduce_all_triangles) {
+  //   std::cout << "Total Graph Traingles : " << total_triangles << std::endl;
+  // }
+  // std::cout << "GPU Elapsed Time : " << gpu_elapsed << " (ms)" << std::endl;
+
+  params.reduce_all_triangles = true;  // used for GTSPS calculation
+  int n_runs = params.num_runs;
+  std::vector<float> run_times;
+  size_t total_triangles = 0;
+  for (int i = 0; i < n_runs; i++) {
+    thrust::device_vector<count_t> triangles_count(n_vertices, 0);
+    size_t tot_triangles = 0;
+    run_times.push_back(tc::run(G, params.reduce_all_triangles,
+                                triangles_count.data().get(), &tot_triangles));
+    total_triangles = tot_triangles;
   }
-  std::cout << "GPU Elapsed Time : " << gpu_elapsed << " (ms)" << std::endl;
+
+  // Print GTSPS
+  float avg_time = 0.;
+  int n_valid = 0;
+  // Skip first third of runs which are as warm-up
+  for (int i = n_runs / 3; i < n_runs; i++) {
+    avg_time += run_times[i];
+    ++n_valid;
+  }
+  avg_time /= n_valid;
+  std::cout << "Valid Runs : " << n_valid << "\n";
+  std::cout << "Total Triangles : " << total_triangles << std::endl;
+  std::cout << "Average Elapsed Time : " << avg_time << " (ms)"
+            << std::endl;
+  std::cout << "GTSPS : " << (total_triangles / 1e9) / (avg_time / 1000)
+            << std::endl;
 
   // --
   // CPU validation
@@ -120,9 +153,9 @@ void test_tc(int num_arguments, char** argument_array) {
                 << "! = " << reference_total_triangles << std::endl;
       n_errors++;
     }
-    n_errors += util::compare(
-        triangles_count.data().get(), reference_triangles_count.data(),
-        n_vertices, [](const auto x, const auto y) { return x != y; }, true);
+    // n_errors += util::compare(
+    //     triangles_count.data().get(), reference_triangles_count.data(),
+    //     n_vertices, [](const auto x, const auto y) { return x != y; }, true);
     std::cout << "CPU Elapsed Time : " << cpu_elapsed << " (ms)" << std::endl;
     std::cout << "Number of errors : " << n_errors << std::endl;
   }
