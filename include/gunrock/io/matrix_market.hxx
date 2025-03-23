@@ -150,6 +150,8 @@ struct matrix_market_t {
     else
       format = matrix_market_format_t::array;
 
+    // std::cout << "nrow: " << num_rows << " ncol: " << num_columns << " nnz: " << num_nonzeros << std::endl;
+
     if (mm_is_pattern(code)) {
       properties.weighted = false;
       data = matrix_market_data_t::pattern;
@@ -158,6 +160,7 @@ struct matrix_market_t {
       for (vertex_t i = 0; i < num_nonzeros; ++i) {
         std::size_t row_index{0}, col_index{0};
         auto num_assigned = fscanf(file, " %zu %zu \n", &row_index, &col_index);
+        // std::cout << i << ": " << row_index << ", " << col_index << std::endl;
         error::throw_if_exception(num_assigned != 2,
                                   "Could not read edge from market file");
         error::throw_if_exception(row_index == 0,

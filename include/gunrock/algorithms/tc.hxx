@@ -15,6 +15,8 @@
 namespace gunrock {
 namespace tc {
 
+using ull = unsigned long long;
+
 template <typename vertex_t>
 struct param_t {
   bool reduce_all_triangles;
@@ -26,9 +28,11 @@ template <typename vertex_t>
 struct result_t {
   vertex_t* vertex_triangles_count;
   std::size_t* total_triangles_count;
-  result_t(vertex_t* _vertex_triangles_count, uint64_t* _total_triangles_count)
+  ull* visited_subgraphs_count;
+  result_t(vertex_t* _vertex_triangles_count, uint64_t* _total_triangles_count, ull* _visited_subgraphs_count)
       : vertex_triangles_count(_vertex_triangles_count),
-        total_triangles_count(_total_triangles_count) {}
+        total_triangles_count(_total_triangles_count),
+        visited_subgraphs_count(_visited_subgraphs_count) {}
 };
 
 template <typename graph_t, typename param_type, typename result_type>
@@ -71,14 +75,16 @@ struct enactor_t : gunrock::enactor_t<problem_t> {
     auto G = P->get_graph();
 
     auto vertex_triangles_count = P->result.vertex_triangles_count;
+    auto* visited_subgraphs_count = P->result.visited_subgraphs_count;
 
-    auto intersect = [G, vertex_triangles_count] __host__ __device__(
+    auto intersect = [G, vertex_triangles_count, visited_subgraphs_count] __host__ __device__(
                          vertex_t const& source,    // ... source
                          vertex_t const& neighbor,  // neighbor
                          edge_t const& edge,        // edge
                          weight_t const& weight     // weight (tuple).
                          ) -> bool {
       if (neighbor > source) {
+        math::atomic::add(visited_subgraphs_count, ull(G.get_number_of_neighbors(source) + G.get_number_of_neighbors(neighbor)));
         auto src_vertex_triangles_count = G.get_intersection_count(
             source, neighbor,
             [vertex_triangles_count, source,
@@ -133,6 +139,7 @@ float run(graph_t& G,
           bool reduce_all_triangles,
           typename graph_t::vertex_type* vertex_triangles_count,  // Output
           std::size_t* total_triangles_count,                     // Output
+          ull* visited_subgraphs_count,
           std::shared_ptr<gcuda::multi_context_t> context =
               std::shared_ptr<gcuda::multi_context_t>(
                   new gcuda::multi_context_t(0))  // Context
@@ -145,7 +152,7 @@ float run(graph_t& G,
   using result_type = result_t<vertex_t>;
 
   param_type param(reduce_all_triangles);
-  result_type result(vertex_triangles_count, total_triangles_count);
+  result_type result(vertex_triangles_count, total_triangles_count, visited_subgraphs_count);
   // </user-defined>
 
   using problem_type = problem_t<graph_t, param_type, result_type>;

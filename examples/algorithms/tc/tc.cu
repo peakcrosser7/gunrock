@@ -84,6 +84,8 @@ void test_tc(int num_arguments, char** argument_array) {
     exit(1);
   }
 
+  // std::cout << "Dataset loaded\n";
+
   // --
   // Build graph
 
@@ -111,16 +113,23 @@ void test_tc(int num_arguments, char** argument_array) {
   // }
   // std::cout << "GPU Elapsed Time : " << gpu_elapsed << " (ms)" << std::endl;
 
+  using ull = unsigned long long;
   params.reduce_all_triangles = true;  // used for GTSPS calculation
   int n_runs = params.num_runs;
   std::vector<float> run_times;
   size_t total_triangles = 0;
+  thrust::host_vector<ull> visited_subgraphs_count(1, 0);
   for (int i = 0; i < n_runs; i++) {
     thrust::device_vector<count_t> triangles_count(n_vertices, 0);
+    thrust::device_vector<ull> visited_count(1, 0);
     size_t tot_triangles = 0;
     run_times.push_back(tc::run(G, params.reduce_all_triangles,
-                                triangles_count.data().get(), &tot_triangles));
-    total_triangles = tot_triangles;
+                                triangles_count.data().get(), &tot_triangles, visited_count.data().get()));
+    
+    if (i == n_runs - 1) {
+      total_triangles = tot_triangles;
+      visited_subgraphs_count = visited_count;
+    }
   }
 
   // Print GTSPS
@@ -136,7 +145,8 @@ void test_tc(int num_arguments, char** argument_array) {
   std::cout << "Total Triangles : " << total_triangles << std::endl;
   std::cout << "Average Elapsed Time : " << avg_time << " (ms)"
             << std::endl;
-  std::cout << "GTSPS : " << (total_triangles / 1e9) / (avg_time / 1000)
+  std::cout << "Visited Subgraphs: " << visited_subgraphs_count[0] << "\n";
+  std::cout << "GTSPS : " << (visited_subgraphs_count[0] / 1e9) / (avg_time / 1000)
             << std::endl;
 
   // --
