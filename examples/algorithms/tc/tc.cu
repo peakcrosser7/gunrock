@@ -61,6 +61,9 @@ void test_tc(int num_arguments, char** argument_array) {
 
   using csr_t =
       format::csr_t<memory_space_t::device, vertex_t, edge_t, weight_t>;
+  using namespace std::chrono;
+  auto t_start = high_resolution_clock::now();
+  
   csr_t csr;
 
   // --
@@ -116,15 +119,15 @@ void test_tc(int num_arguments, char** argument_array) {
   using ull = unsigned long long;
   params.reduce_all_triangles = true;  // used for GTSPS calculation
   int n_runs = params.num_runs;
-  std::vector<float> run_times;
+
   size_t total_triangles = 0;
   thrust::host_vector<ull> visited_subgraphs_count(1, 0);
   for (int i = 0; i < n_runs; i++) {
     thrust::device_vector<count_t> triangles_count(n_vertices, 0);
     thrust::device_vector<ull> visited_count(1, 0);
     size_t tot_triangles = 0;
-    run_times.push_back(tc::run(G, params.reduce_all_triangles,
-                                triangles_count.data().get(), &tot_triangles, visited_count.data().get()));
+    tc::run(G, params.reduce_all_triangles,
+            triangles_count.data().get(), &tot_triangles, visited_count.data().get());
     
     if (i == n_runs - 1) {
       total_triangles = tot_triangles;
@@ -132,15 +135,13 @@ void test_tc(int num_arguments, char** argument_array) {
     }
   }
 
+  auto t_stop = high_resolution_clock::now();
+  auto elapsed = duration_cast<microseconds>(t_stop - t_start).count();
+  float run_times = (float)elapsed / 1000;
+
   // Print GTSPS
-  float avg_time = 0.;
-  int n_valid = 0;
-  // Skip first third of runs which are as warm-up
-  for (int i = n_runs / 3; i < n_runs; i++) {
-    avg_time += run_times[i];
-    ++n_valid;
-  }
-  avg_time /= n_valid;
+  int n_valid = n_runs;
+  float avg_time = run_times / n_valid;
   std::cout << "Valid Runs : " << n_valid << "\n";
   std::cout << "Total Triangles : " << total_triangles << std::endl;
   std::cout << "Average Elapsed Time : " << avg_time << " (ms)"
