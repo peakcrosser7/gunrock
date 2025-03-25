@@ -172,6 +172,72 @@ class graph_csr_t {
     return intersection_count;
   }
 
+  template <typename operator_type, typename visited_type>
+  __host__ __device__ __forceinline__ vertex_type
+  get_intersection_count(const vertex_type& source,
+                         const vertex_type& destination,
+                         operator_type on_intersection,
+                         visited_type* visited_subgraphs) const {
+    vertex_type intersection_count = 0;
+
+    auto intersection_source = source;
+    auto intersection_destination = destination;
+
+    auto source_neighbors_count = get_number_of_neighbors(source);
+    auto destination_neighbors_count = get_number_of_neighbors(destination);
+
+    if (source_neighbors_count == 0 || destination_neighbors_count == 0) {
+      return 0;
+    }
+    if (source_neighbors_count > destination_neighbors_count) {
+      thrust::swap(intersection_source, intersection_destination);
+      thrust::swap(source_neighbors_count, destination_neighbors_count);
+    }
+
+    auto source_offset = offsets[intersection_source];
+    auto destination_offset = offsets[intersection_destination];
+
+    auto source_edges_iter = indices + source_offset;
+    auto destination_edges_iter = indices + destination_offset;
+
+    auto needle = *destination_edges_iter;
+
+    auto source_search_start = thrust::distance(
+        source_edges_iter,
+        thrust::lower_bound(thrust::seq, source_edges_iter,
+                            source_edges_iter + source_neighbors_count,
+                            needle));
+
+    if (source_search_start == source_neighbors_count) {
+      return 0;
+    }
+    edge_type destination_search_start = 0;
+
+    visited_type src_visited = source_search_start;
+    visited_type dst_visited = destination_search_start;
+
+    while (source_search_start < source_neighbors_count &&
+           destination_search_start < destination_neighbors_count) {
+      auto cur_edge_src = source_edges_iter[source_search_start];
+      auto cur_edge_dst = destination_edges_iter[destination_search_start];
+      if (cur_edge_src == cur_edge_dst) {
+        intersection_count++;
+        source_search_start++;
+        destination_search_start++;
+        on_intersection(cur_edge_src);
+      } else if (cur_edge_src > cur_edge_dst) {
+        destination_search_start++;
+      } else {
+        source_search_start++;
+      }
+    }
+    src_visited = source_search_start - src_visited;
+    dst_visited = destination_search_start - dst_visited;
+    math::atomic::add(visited_subgraphs, src_visited + dst_visited); 
+
+    return intersection_count;
+  }
+  
   __host__ __device__ __forceinline__ weight_type
   get_edge_weight(edge_type const& e) const {
     return thread::load(&values[e]);

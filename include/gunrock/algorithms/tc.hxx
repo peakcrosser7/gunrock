@@ -84,7 +84,6 @@ struct enactor_t : gunrock::enactor_t<problem_t> {
                          weight_t const& weight     // weight (tuple).
                          ) -> bool {
       if (neighbor > source) {
-        math::atomic::add(visited_subgraphs_count, ull(G.get_number_of_neighbors(source) + G.get_number_of_neighbors(neighbor)));
         auto src_vertex_triangles_count = G.get_intersection_count(
             source, neighbor,
             [vertex_triangles_count, source,
@@ -95,7 +94,7 @@ struct enactor_t : gunrock::enactor_t<problem_t> {
                     &(vertex_triangles_count[intersection_vertex]),
                     vertex_t{1});
               }
-            });
+            }, visited_subgraphs_count);
       }
       return false;
     };
