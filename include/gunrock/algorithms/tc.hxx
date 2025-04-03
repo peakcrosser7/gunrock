@@ -29,10 +29,12 @@ struct result_t {
   vertex_t* vertex_triangles_count;
   std::size_t* total_triangles_count;
   ull* visited_subgraphs_count;
+  thrust::device_vector<ull> d_visited_subgraphs_count;
   result_t(vertex_t* _vertex_triangles_count, uint64_t* _total_triangles_count, ull* _visited_subgraphs_count)
       : vertex_triangles_count(_vertex_triangles_count),
         total_triangles_count(_total_triangles_count),
-        visited_subgraphs_count(_visited_subgraphs_count) {}
+        visited_subgraphs_count(_visited_subgraphs_count),
+        d_visited_subgraphs_count(1, 0) {}
 };
 
 template <typename graph_t, typename param_type, typename result_type>
@@ -75,7 +77,7 @@ struct enactor_t : gunrock::enactor_t<problem_t> {
     auto G = P->get_graph();
 
     auto vertex_triangles_count = P->result.vertex_triangles_count;
-    auto* visited_subgraphs_count = P->result.visited_subgraphs_count;
+    auto* visited_subgraphs_count = P->result.d_visited_subgraphs_count.data().get();
 
     auto intersect = [G, vertex_triangles_count, visited_subgraphs_count] __host__ __device__(
                          vertex_t const& source,    // ... source
@@ -127,8 +129,9 @@ struct enactor_t : gunrock::enactor_t<problem_t> {
           [] __host__ __device__(const vertex_t& vertex_triangles) {
             return static_cast<std::size_t>(vertex_triangles);
           },
-          std::size_t{0}, thrust::plus<std::size_t>());
+          std::size_t{0}, thrust::plus<std::size_t>()) / 3;
     }
+    *P->result.visited_subgraphs_count = P->result.d_visited_subgraphs_count[0] / 3;
     return timer.end();
   }
 };  // struct enactor_t
